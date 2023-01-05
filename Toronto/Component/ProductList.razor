@@ -1,0 +1,15 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+@using Toronto.Service
+
+@inject ProductService Service
+
+@foreach(var product in Service.GetProducts()){
+    <li @onclick="() => Display(product.Name)">@product.Name</li>
+}
+
+@code {
+    void Display(string product)
+    {
+       System.Console.WriteLine($"Current selected {product}");
+    }
+}
