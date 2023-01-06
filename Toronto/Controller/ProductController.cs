@@ -22,13 +22,22 @@ namespace Toronto.Controller
             return ProductService.GetProducts();
         }
 
-        [HttpGet]
-        [Route("Tax")]
-        public ActionResult Update([FromQueryAttribute] int Id,
-                                   [FromQueryAttribute] int Tax)
+        [HttpPatch]
+        public ActionResult Patch([FromBody] RatingRequest request)
         {
-            ProductService.UpdateTax(Id, Tax);
+            if (request?.ProductId == null)
+                return BadRequest();
+
+            ProductService.AddRating(request.ProductId, request.Rating);
+
             return Ok();
         }
+
+        public class RatingRequest
+        {
+            public string? ProductId { get; set; }
+            public int Rating { get; set; }
+        }
+
     }
 }
