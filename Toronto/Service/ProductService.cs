@@ -11,9 +11,8 @@ namespace Toronto.Service
         }
 
         public IWebHostEnvironment WebHostEnvironment { get; }
-        //provides information about the web hosting where application is hosted
 
-        private string FileName
+        private string JsonFileName
         {
             get
             {
@@ -23,42 +22,41 @@ namespace Toronto.Service
 
         public IEnumerable<Product> GetProducts()
         {
-            using(var reader = File.OpenText(FileName))
-            {
-                var list = JsonSerializer.Deserialize<Product[]>(reader.ReadToEnd(),
-                    new JsonSerializerOptions
+            using var reader = File.OpenText(JsonFileName);
+
+            return JsonSerializer.Deserialize<Product[]>(reader.ReadToEnd(),
+                new JsonSerializerOptions
                 {
-                        PropertyNameCaseInsensitive = true,
+                    PropertyNameCaseInsensitive = true,
                 });
-                return list;
-            }
         }
 
-        public void UpdateTax(int Id, int Tax)
+
+        public void AddRating(string productId, int rating)
         {
             var products = GetProducts();
 
-            var query = products.First(x => x.Id == Id);
-
-            if (query.Tax == null)
-                query.Tax = new[] { Tax };
-
+            if (products.First(x => x.Id == productId).Ratings == null)
+            {
+                products.First(x => x.Id == productId).Ratings = new int[] { rating };
+            }
             else
             {
-                var taxes = query.Tax.ToList();
-                taxes.Add(Tax);
-                query.Tax = taxes.ToArray();
+                var ratings = products.First(x => x.Id == productId).Ratings.ToList();
+                ratings.Add(rating);
+                products.First(x => x.Id == productId).Ratings = ratings.ToArray();
             }
 
-            using (var file = File.OpenWrite(FileName)) {
-                JsonSerializer.Serialize<IEnumerable<Product>>(
-                    new Utf8JsonWriter(file, new JsonWriterOptions
-                    {
-                        SkipValidation = true,
-                        Indented = true,
-                    }), products);
-            };
-                
+            using var outputStream = File.OpenWrite(JsonFileName);
+
+            JsonSerializer.Serialize<IEnumerable<Product>>(
+                new Utf8JsonWriter(outputStream, new JsonWriterOptions
+                {
+                    SkipValidation = true,
+                    Indented = true
+                }),
+                products
+            );
         }
     }
 }
